@@ -36,4 +36,4 @@ jobs:
         git commit -m "Mise à jour quotidienne des données météo"
         git push
       env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
