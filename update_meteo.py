@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 # Configuration de l'API
 API_KEY = 'd72efd6039d748830031be5f8d64c71d'
 LOCATION = 'France'  # Vous pouvez spécifier une ville ou des coordonnées précises
-URL = f'http://api.openweathermap.org/data/2.5/forecast?q={LOCATION}&appid={API_KEY}&units=metric'
+URL = f'http://api.openweathermap.org/data/2.5/forecast?q={LOCATION}&exclude=current,minutely,daily,alerts&appid={API_KEY}&units=metric'
 
 def fetch_weather_data():
     response = requests.get(URL)
