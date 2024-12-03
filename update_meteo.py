@@ -1,11 +1,12 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+import os
 
-# Configuration de l'API
-API_KEY = 'd72efd6039d748830031be5f8d64c71d'
-LOCATION = 'France'  # Vous pouvez spécifier une ville ou des coordonnées précises
-URL = f'http://api.openweathermap.org/data/2.5/forecast?q={LOCATION}&exclude=current,minutely,daily,alerts&appid={API_KEY}&units=metric'
+# Configuration de l'API Open-Meteo
+LATITUDE = 48.8566  # Latitude de Paris
+LONGITUDE = 2.3522   # Longitude de Paris
+URL = f'https://api.open-meteo.com/v1/forecast?latitude={LATITUDE}&longitude={LONGITUDE}&hourly=temperature_2m&forecast_days=3&timezone=Europe/Paris'
 
 def fetch_weather_data():
     response = requests.get(URL)
@@ -13,18 +14,26 @@ def fetch_weather_data():
     
     # Vérifier que la requête a réussi
     if response.status_code != 200:
-        raise Exception(f"Erreur lors de la récupération des données météo: {data.get('message', '')}")
+        raise Exception(f"Erreur lors de la récupération des données météo: {data.get('reason', 'Unknown error')}")
     
-    # Extraire les prévisions (chaque 3 heures, donc 8 prévisions par jour)
-    forecasts = data['list']
+    # Extraire les prévisions horaires (72 heures)
+    hourly = data.get('hourly', {})
+    times = hourly.get('time', [])
+    temperatures = hourly.get('temperature_2m', [])
     
-    # Créer une liste pour stocker les données
+    if not times or not temperatures:
+        raise Exception("Pas de données horaires trouvées dans la réponse de l'API.")
+    
+    # Limiter aux prochaines 72 heures
+    current_time = datetime.now()
+    cutoff_time = current_time + timedelta(hours=72)
+    
     weather_data = []
-    
-    for forecast in forecasts:
-        time = datetime.fromtimestamp(forecast['dt'])
-        temperature = forecast['main']['temp']
-        weather_data.append({'time': time, 'temperature_2m (°C)': temperature})
+    for time_str, temp in zip(times, temperatures):
+        time = datetime.fromisoformat(time_str)
+        if time > cutoff_time:
+            break
+        weather_data.append({'time': time, 'temperature_2m (°C)': temp})
     
     # Convertir en DataFrame
     df_weather = pd.DataFrame(weather_data)
@@ -35,3 +44,4 @@ def fetch_weather_data():
 
 if __name__ == "__main__":
     fetch_weather_data()
+
