@@ -5,6 +5,9 @@ on:
     - cron: '0 6 * * *'  # Exécuter tous les jours à 06:00 UTC
   workflow_dispatch:  # Permet également de déclencher manuellement
 
+permissions:
+  contents: write  # Accorde les permissions de lecture et d'écriture au contenu du dépôt
+
 jobs:
   update-meteo:
     runs-on: ubuntu-latest
@@ -12,11 +15,13 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
+      with:
+        persist-credentials: true  # Par défaut, mais explicitement mentionné ici
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'  # Spécifiez la version de Python que vous utilisez
+        python-version: '3.8'  # Spécifiez la version de Python utilisée
 
     - name: Install Dependencies
       run: |
@@ -33,7 +38,7 @@ jobs:
         git config --local user.name "github-actions[bot]"
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git add meteo_previsions.csv
-        git commit -m "Mise à jour quotidienne des données météo"
-        git push
+        git commit -m "Mise à jour quotidienne des données météo" || echo "Pas de changements à committer"
+        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
